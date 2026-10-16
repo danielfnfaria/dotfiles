@@ -5,6 +5,11 @@ e a status line do Claude Code. Tema Catppuccin Macchiato em tudo.
 
 ## Instalação
 
+    curl -fsSL https://raw.githubusercontent.com/danielfnfaria/dotfiles/main/install.sh | bash
+
+Isso clona o repo em `~/dotfiles` (outro lugar: `... | DOTFILES_DIR=~/src/dotfiles bash`) e roda o `install.sh` de lá.
+Se preferir clonar à mão:
+
     git clone https://github.com/danielfnfaria/dotfiles ~/dotfiles
     ~/dotfiles/install.sh
 

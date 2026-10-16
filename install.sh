@@ -1,9 +1,29 @@
 #!/usr/bin/env bash
 # Instala os dotfiles: dependências via Homebrew, symlinks em ~ e statusLine do Claude Code.
 # Pode rodar de novo quantas vezes quiser; o que já está certo fica como está.
+#
+# Remoto (clona em ~/dotfiles, ou DOTFILES_DIR, e roda a cópia local):
+#   curl -fsSL https://raw.githubusercontent.com/danielfnfaria/dotfiles/main/install.sh | bash
 set -euo pipefail
 
-DOT="$(cd "$(dirname "$0")" && pwd)"
+# via curl | bash não existe arquivo do script: os symlinks precisam de um clone fixo para apontar
+if [ -z "${BASH_SOURCE[0]:-}" ]; then
+  repo="${DOTFILES_REPO:-https://github.com/danielfnfaria/dotfiles.git}"
+  dir="${DOTFILES_DIR:-$HOME/dotfiles}"
+  if ! xcode-select -p &> /dev/null; then
+    xcode-select --install || true
+    echo "ERR: instale as Command Line Tools (git) na janela que abriu e rode de novo"
+    exit 1
+  fi
+  if [ -d "$dir/.git" ]; then
+    git -C "$dir" pull --ff-only
+  else
+    git clone "$repo" "$dir"
+  fi
+  exec bash "$dir/install.sh" < /dev/null
+fi
+
+DOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STAMP=$(date +%Y%m%d-%H%M%S)
 
 # --- dependências ---------------------------------------------------------------------------
@@ -20,7 +40,7 @@ for c in ghostty font-fira-code-nerd-font; do
 done
 
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
-  RUNZSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 fi
 
 # --- symlinks -------------------------------------------------------------------------------
