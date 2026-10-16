@@ -10,17 +10,17 @@ export PATH="$PATH:/usr/local/go/bin:$HOME/go/bin"
 
 # --- NVM ---
 export NVM_DIR="$HOME/.nvm"
-[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"                                # This loads nvm
-[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # nvm bash_completion
+[ -s "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/nvm/nvm.sh" ] && \. "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/nvm/nvm.sh"                                # This loads nvm
+[ -s "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/nvm/etc/bash_completion.d/nvm" ] && \. "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/nvm/etc/bash_completion.d/nvm"  # nvm bash_completion
 
 # --- Istio (istioctl baixado em ~/istio-<versão>; usa a mais recente) ---
 for d in "$HOME"/istio-*/bin(Nn[-1]); do export PATH="$PATH:$d"; done
 
 # --- curl / cargo / local bin / libpq (Homebrew) ---
-export PATH="/opt/homebrew/opt/curl/bin:$PATH"
+export PATH="${HOMEBREW_PREFIX:-/opt/homebrew}/opt/curl/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
-export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+export PATH="${HOMEBREW_PREFIX:-/opt/homebrew}/opt/libpq/bin:$PATH"
 
 # --- Google Cloud SDK ---
 if [ -f "$HOME/google-cloud-sdk/path.zsh.inc" ]; then . "$HOME/google-cloud-sdk/path.zsh.inc"; fi

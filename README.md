@@ -13,13 +13,18 @@ Se preferir clonar à mão:
     git clone https://github.com/danielfnfaria/dotfiles ~/dotfiles
     ~/dotfiles/install.sh
 
-O `install.sh`:
-- instala via Homebrew o que faltar: starship, kubecolor, fzf, jq, gh, ghostty,
-  FiraCode Nerd Font e oh-my-zsh;
+Funciona num Mac zerado. O `install.sh`:
+- instala o Homebrew, se faltar (pede a senha de administrador; ele traz as Command Line Tools e o git);
+- instala via Homebrew o que faltar: git, starship, kubectl, kubecolor, fzf, jq, gh, Ghostty,
+  Fira Code, FiraCode Nerd Font e Claude Code, além do oh-my-zsh;
 - cria symlinks em `~` (o que já existir vira `<arquivo>.bak-<data>`);
 - adiciona o `statusLine` ao `~/.claude/settings.json` sem mexer no resto.
 
+No fim, abra o Ghostty e faça login: `gh auth login` (CI das PRs na status line) e `claude`.
+
 Para atualizar: `git -C ~/dotfiles pull`.
+
+Opcionais, carregados só se estiverem instalados: nvm, pyenv, Go, gcloud, Istio, opencode.
 
 ## O que vem
 

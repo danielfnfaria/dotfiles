@@ -1,20 +1,35 @@
 #!/usr/bin/env bash
-# Instala os dotfiles: dependências via Homebrew, symlinks em ~ e statusLine do Claude Code.
-# Pode rodar de novo quantas vezes quiser; o que já está certo fica como está.
+# Instala os dotfiles num Mac (até um zerado): Homebrew, dependências, symlinks em ~ e
+# statusLine do Claude Code. Pode rodar de novo quantas vezes quiser; o que já está certo fica.
 #
 # Remoto (clona em ~/dotfiles, ou DOTFILES_DIR, e roda a cópia local):
 #   curl -fsSL https://raw.githubusercontent.com/danielfnfaria/dotfiles/main/install.sh | bash
 set -euo pipefail
 
+# Homebrew; o instalador oficial também instala as Command Line Tools (git)
+ensure_brew() {
+  local b
+  if ! command -v brew &> /dev/null; then
+    for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+      [ -x "$b" ] && break
+    done
+    if [ ! -x "$b" ]; then
+      echo ">> instalando Homebrew (pede a senha de administrador)"
+      sudo -v < /dev/tty
+      NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+        [ -x "$b" ] && break
+      done
+    fi
+    eval "$("$b" shellenv)"
+  fi
+}
+
 # via curl | bash não existe arquivo do script: os symlinks precisam de um clone fixo para apontar
 if [ -z "${BASH_SOURCE[0]:-}" ]; then
+  ensure_brew
   repo="${DOTFILES_REPO:-https://github.com/danielfnfaria/dotfiles.git}"
   dir="${DOTFILES_DIR:-$HOME/dotfiles}"
-  if ! xcode-select -p &> /dev/null; then
-    xcode-select --install || true
-    echo "ERR: instale as Command Line Tools (git) na janela que abriu e rode de novo"
-    exit 1
-  fi
   if [ -d "$dir/.git" ]; then
     git -C "$dir" pull --ff-only
   else
@@ -27,17 +42,24 @@ DOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STAMP=$(date +%Y%m%d-%H%M%S)
 
 # --- dependências ---------------------------------------------------------------------------
-if ! command -v brew &> /dev/null; then
-  echo "ERR: Homebrew não encontrado; instale em https://brew.sh e rode de novo"
-  exit 1
-fi
+ensure_brew
 
-for f in starship kubecolor fzf jq gh; do
+# fórmulas: prompt, kubectl colorido, seletor do kctx, e jq/gh da status line
+for f in git starship kubernetes-cli kubecolor fzf jq gh; do
   brew list --formula "$f" &> /dev/null || brew install "$f"
 done
-for c in ghostty font-fira-code-nerd-font; do
-  brew list --cask "$c" &> /dev/null || brew install --cask "$c"
-done
+
+# casks: <cask> <o que indica que já está instalado fora do brew>
+while read -r c app; do
+  brew list --cask "$c" &> /dev/null && continue
+  [ -e "$app" ] && continue
+  brew install --cask "$c"
+done <<EOF
+ghostty                   /Applications/Ghostty.app
+font-fira-code            $HOME/Library/Fonts/FiraCode-Regular.ttf
+font-fira-code-nerd-font  $HOME/Library/Fonts/FiraCodeNerdFont-Regular.ttf
+claude-code               $(command -v claude || echo "$HOME/.local/bin/claude")
+EOF
 
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
   RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -83,4 +105,4 @@ mv "$tmp" "$settings"
 echo "statusLine adicionada em $settings"
 
 echo
-echo "Pronto. Abra um terminal novo (ou rode: exec zsh)."
+echo "Pronto. Abra o Ghostty (ou um terminal novo) e rode: gh auth login && claude"

@@ -1,3 +1,8 @@
+# Homebrew no PATH (Apple Silicon em /opt/homebrew, Intel em /usr/local)
+for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+  [ -x "$b" ] && { eval "$("$b" shellenv)"; break; }
+done
+
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
