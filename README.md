@@ -1,6 +1,6 @@
 # dotfiles
 
-Meu setup de terminal no macOS: zsh (oh-my-zsh + `~/.zsh.d`), Starship, Ghostty
+Meu setup de terminal no macOS: zsh (oh-my-zsh + `~/.zsh.d`), Starship
 e a status line do Claude Code. Tema Catppuccin Macchiato em tudo.
 
 ## Instalação
@@ -14,13 +14,16 @@ Se preferir clonar à mão:
     ~/dotfiles/install.sh
 
 Funciona num Mac zerado. O `install.sh`:
-- instala o Homebrew, se faltar (pede a senha de administrador; ele traz as Command Line Tools e o git);
-- instala via Homebrew o que faltar: git, starship, kubectl, kubecolor, fzf, jq, gh, Ghostty,
-  Fira Code, FiraCode Nerd Font e Claude Code, além do oh-my-zsh;
+- usa o Homebrew que já existir; se faltar, instala:
+  - **admin:** o oficial em `/opt/homebrew` (pede a senha uma vez; traz as Command Line Tools e o git);
+  - **sem admin, ou com o brew da máquina sendo de outro usuário:** um só seu em `~/.homebrew`, sem sudo
+    (as Command Line Tools precisam já estar instaladas: `xcode-select --install`, feito por um admin);
+- instala via Homebrew o que faltar: starship, kubectl, kubecolor, fzf, jq, gh,
+  FiraCode Nerd Font e Claude Code, além do oh-my-zsh;
 - cria symlinks em `~` (o que já existir vira `<arquivo>.bak-<data>`);
 - adiciona o `statusLine` ao `~/.claude/settings.json` sem mexer no resto.
 
-No fim, abra o Ghostty e faça login: `gh auth login` (CI das PRs na status line) e `claude`.
+No fim, abra um terminal novo e faça login: `gh auth login` (CI das PRs na status line) e `claude`.
 
 Para atualizar: `git -C ~/dotfiles pull`.
 
@@ -35,7 +38,6 @@ Opcionais, carregados só se estiverem instalados: nvm, pyenv, Go, gcloud, Istio
 | `zsh/.zsh.d/101-functions.sh` | `kctx` (troca de contexto k8s com fzf), `cwatch`, `retag` |
 | `zsh/.zsh.d/110-env.sh` | Starship, Go, nvm, pyenv, gcloud… (só o que estiver instalado) |
 | `starship/starship.toml` | `~/.config/starship.toml` |
-| `ghostty/config` | `~/.config/ghostty/config` — quick terminal em `cmd+o` |
 | `claude/statusline.sh` | `~/.claude/statusline.sh` |
 
 ## Segredos

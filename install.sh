@@ -6,28 +6,74 @@
 #   curl -fsSL https://raw.githubusercontent.com/danielfnfaria/dotfiles/main/install.sh | bash
 set -euo pipefail
 
-# acha o brew: no PATH ou nos prefixos padrão (Apple Silicon e Intel)
-find_brew() {
-  local b
-  for b in "$(command -v brew 2> /dev/null)" /opt/homebrew/bin/brew /usr/local/bin/brew; do
-    [ -n "$b" ] && [ -x "$b" ] && { echo "$b"; return; }
-  done
+USER_BREW="$HOME/.homebrew"   # Homebrew só deste usuário, quando o do sistema não serve
+
+# candidatos na mesma ordem do ~/.zshrc, para o script e o shell usarem o mesmo brew
+brew_candidates() {
+  echo "$USER_BREW/bin/brew"
+  echo /opt/homebrew/bin/brew
+  echo /usr/local/bin/brew
+  command -v brew 2> /dev/null || true
 }
 
-# Homebrew: se já existe, só usa (sem sudo); se não, instala. O instalador oficial é o
-# único passo que pede senha: cria /opt/homebrew e instala as Command Line Tools (git)
-ensure_brew() {
+# o brew é deste usuário? (Intel: /usr/local é do root, mas o Cellar é de quem instalou)
+brew_writable() {
+  local p
+  p=$(dirname "$(dirname "$1")")
+  [ -w "$p/Cellar" ] || { [ ! -e "$p/Cellar" ] && [ -w "$p" ]; }
+}
+
+# primeiro brew que existe e em que este usuário pode instalar
+find_brew() {
   local b
+  while read -r b; do
+    [ -x "$b" ] && brew_writable "$b" && { echo "$b"; return; }
+  done < <(brew_candidates)
+  return 0   # nada achado não é erro (o script roda com set -e)
+}
+
+# primeiro brew que existe mas é de outro usuário (só para explicar o que vai acontecer)
+foreign_brew() {
+  local b
+  while read -r b; do
+    [ -x "$b" ] && ! brew_writable "$b" && { echo "$b"; return; }
+  done < <(brew_candidates)
+  return 0
+}
+
+is_admin() { id -Gn | tr ' ' '\n' | grep -qx admin; }
+
+# Homebrew, em ordem de preferência, sem nunca mexer no brew de outro usuário:
+#   1. já existe um deste usuário: só usa (sem sudo)
+#   2. não existe nenhum e o usuário é admin: instalador oficial em /opt/homebrew (pede a
+#      senha uma vez: cria a pasta e instala as Command Line Tools, que trazem o git)
+#   3. senão (sem admin, ou o brew do sistema é de outro usuário): clone em ~/.homebrew (sem sudo)
+ensure_brew() {
+  local b other
   b=$(find_brew)
+  other=$(foreign_brew)
   if [ -n "$b" ]; then
-    [ -n "${DOTFILES_BREW_OK:-}" ] || echo "==> Homebrew já instalado em $("$b" --prefix), pulando (sem sudo)"
-  else
+    [ -n "${DOTFILES_BREW_OK:-}" ] || echo "==> Homebrew já instalado em ${b%/bin/brew}, pulando (sem sudo)"
+  elif [ -z "$other" ] && is_admin; then
     echo "==> Homebrew não encontrado, instalando (pede a senha de administrador uma vez)"
     sudo -v
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     b=$(find_brew)
-    [ -n "$b" ] || { echo "ERR: Homebrew não ficou instalado"; exit 1; }
+  else
+    if [ -n "$other" ]; then
+      echo "==> o Homebrew em ${other%/bin/brew} é de outro usuário; instalando um só seu em $USER_BREW (sem sudo)"
+    else
+      echo "==> usuário sem admin; instalando o Homebrew só para você em $USER_BREW (sem sudo)"
+    fi
+    if ! xcode-select -p &> /dev/null; then
+      echo "ERR: faltam as Command Line Tools (git), e só um admin consegue instalá-las:"
+      echo "     peça para rodarem 'xcode-select --install' nesta máquina e rode este script de novo"
+      exit 1
+    fi
+    git clone -q https://github.com/Homebrew/brew "$USER_BREW"
+    b="$USER_BREW/bin/brew"
   fi
+  [ -n "$b" ] && [ -x "$b" ] || { echo "ERR: Homebrew não ficou instalado"; exit 1; }
   eval "$("$b" shellenv)"
   export DOTFILES_BREW_OK=1   # o install.sh relançado após o clone não repete a mensagem
 }
@@ -52,18 +98,18 @@ STAMP=$(date +%Y%m%d-%H%M%S)
 ensure_brew
 
 # fórmulas: prompt, kubectl colorido, seletor do kctx, e jq/gh da status line
-for f in git starship kubernetes-cli kubecolor fzf jq gh; do
+# (git não: o das Command Line Tools basta, e o do brew compila do fonte fora do /opt/homebrew)
+for f in starship kubernetes-cli kubecolor fzf jq gh; do
   brew list --formula "$f" &> /dev/null || brew install "$f"
 done
 
-# casks: <cask> <o que indica que já está instalado fora do brew>
-while read -r c app; do
+# casks (nada vai para /Applications: fontes em ~/Library/Fonts, claude no prefixo do brew)
+# <cask> <o que indica que já está instalado fora do brew>
+while read -r c path; do
   brew list --cask "$c" &> /dev/null && continue
-  [ -e "$app" ] && continue
+  [ -e "$path" ] && continue
   brew install --cask "$c"
 done <<EOF
-ghostty                   /Applications/Ghostty.app
-font-fira-code            $HOME/Library/Fonts/FiraCode-Regular.ttf
 font-fira-code-nerd-font  $HOME/Library/Fonts/FiraCodeNerdFont-Regular.ttf
 claude-code               $(command -v claude || echo "$HOME/.local/bin/claude")
 EOF
@@ -93,7 +139,6 @@ link zsh/.zsh.d/100-aliases.sh      "$HOME/.zsh.d/100-aliases.sh"
 link zsh/.zsh.d/101-functions.sh    "$HOME/.zsh.d/101-functions.sh"
 link zsh/.zsh.d/110-env.sh          "$HOME/.zsh.d/110-env.sh"
 link starship/starship.toml         "$HOME/.config/starship.toml"
-link ghostty/config                 "$HOME/.config/ghostty/config"
 link claude/statusline.sh           "$HOME/.claude/statusline.sh"
 
 # credenciais: só o modelo, nunca sobrescreve o real
@@ -112,4 +157,4 @@ mv "$tmp" "$settings"
 echo "statusLine adicionada em $settings"
 
 echo
-echo "Pronto. Abra o Ghostty (ou um terminal novo) e rode: gh auth login && claude"
+echo "Pronto. Abra um terminal novo e rode: gh auth login && claude"

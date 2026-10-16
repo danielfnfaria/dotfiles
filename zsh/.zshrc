@@ -1,7 +1,14 @@
-# Homebrew no PATH (Apple Silicon em /opt/homebrew, Intel em /usr/local)
-for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
-  [ -x "$b" ] && { eval "$("$b" shellenv)"; break; }
+# Homebrew no PATH: o primeiro em que este usuário pode instalar, na mesma ordem do
+# install.sh (~/.homebrew só deste usuário, Apple Silicon, Intel); senão, o primeiro que existir
+_brew=""
+for b in "$HOME/.homebrew/bin/brew" /opt/homebrew/bin/brew /usr/local/bin/brew; do
+  [ -x "$b" ] || continue
+  [ -z "$_brew" ] && _brew=$b
+  p=${b%/bin/brew}
+  if [ -w "$p/Cellar" ] || { [ ! -e "$p/Cellar" ] && [ -w "$p" ]; }; then _brew=$b; break; fi
 done
+[ -n "$_brew" ] && eval "$("$_brew" shellenv)"
+unset _brew b p
 
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
