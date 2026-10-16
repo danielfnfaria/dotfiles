@@ -6,23 +6,30 @@
 #   curl -fsSL https://raw.githubusercontent.com/danielfnfaria/dotfiles/main/install.sh | bash
 set -euo pipefail
 
-# Homebrew; o instalador oficial também instala as Command Line Tools (git)
+# acha o brew: no PATH ou nos prefixos padrão (Apple Silicon e Intel)
+find_brew() {
+  local b
+  for b in "$(command -v brew 2> /dev/null)" /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    [ -n "$b" ] && [ -x "$b" ] && { echo "$b"; return; }
+  done
+}
+
+# Homebrew: se já existe, só usa (sem sudo); se não, instala. O instalador oficial é o
+# único passo que pede senha: cria /opt/homebrew e instala as Command Line Tools (git)
 ensure_brew() {
   local b
-  if ! command -v brew &> /dev/null; then
-    for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
-      [ -x "$b" ] && break
-    done
-    if [ ! -x "$b" ]; then
-      echo ">> instalando Homebrew (pede a senha de administrador)"
-      sudo -v < /dev/tty
-      NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-      for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
-        [ -x "$b" ] && break
-      done
-    fi
-    eval "$("$b" shellenv)"
+  b=$(find_brew)
+  if [ -n "$b" ]; then
+    [ -n "${DOTFILES_BREW_OK:-}" ] || echo "==> Homebrew já instalado em $("$b" --prefix), pulando (sem sudo)"
+  else
+    echo "==> Homebrew não encontrado, instalando (pede a senha de administrador uma vez)"
+    sudo -v
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    b=$(find_brew)
+    [ -n "$b" ] || { echo "ERR: Homebrew não ficou instalado"; exit 1; }
   fi
+  eval "$("$b" shellenv)"
+  export DOTFILES_BREW_OK=1   # o install.sh relançado após o clone não repete a mensagem
 }
 
 # via curl | bash não existe arquivo do script: os symlinks precisam de um clone fixo para apontar
