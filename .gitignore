@@ -1,0 +1,3 @@
+zsh/.zsh.d/000-credentials.sh
+*.bak*
+.DS_Store
