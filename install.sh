@@ -139,6 +139,7 @@ link zsh/.zsh.d/100-aliases.sh      "$HOME/.zsh.d/100-aliases.sh"
 link zsh/.zsh.d/101-functions.sh    "$HOME/.zsh.d/101-functions.sh"
 link zsh/.zsh.d/110-env.sh          "$HOME/.zsh.d/110-env.sh"
 link starship/starship.toml         "$HOME/.config/starship.toml"
+link ghostty/config                 "$HOME/.config/ghostty/config"
 link claude/statusline.sh           "$HOME/.claude/statusline.sh"
 
 # credenciais: só o modelo, nunca sobrescreve o real

@@ -1,6 +1,7 @@
+| `ghostty/config` | `~/.config/ghostty/config` — quick terminal em `cmd+o` (o app em si não é instalado) |
 # dotfiles
 
-Meu setup de terminal no macOS: zsh (oh-my-zsh + `~/.zsh.d`), Starship
+Meu setup de terminal no macOS: zsh (oh-my-zsh + `~/.zsh.d`), Starship, Ghostty
 e a status line do Claude Code. Tema Catppuccin Macchiato em tudo.
 
 ## Instalação
