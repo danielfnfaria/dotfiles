@@ -1,0 +1,42 @@
+font-family = FiraCode Nerd Font
+font-style = Medium
+font-size = 16
+font-thicken = false
+adjust-cell-width = -3
+bold-is-bright = true
+font-family-bold = Fira Code
+font-style-bold = Medium
+
+
+shell-integration = zsh
+shell-integration-features = cursor,sudo
+
+link-url = true
+
+theme = Catppuccin Macchiato
+
+window-padding-x = 1
+window-padding-y = 1
+
+window-decoration = auto
+
+desktop-notifications = true
+clipboard-paste-protection = false
+
+unfocused-split-opacity = 0.85
+unfocused-split-fill = #1e1e2e
+split-divider-color = #cba6f7
+
+background-opacity = 1.0
+background-blur-radius = 10
+
+macos-titlebar-style = transparent
+macos-option-as-alt = false
+
+quick-terminal-position = center
+quick-terminal-screen = main
+quick-terminal-animation-duration = 0.15
+quick-terminal-autohide = true
+quick-terminal-size = 20%,50%
+
+keybind = global:cmd+o=toggle_quick_terminal
